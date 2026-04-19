@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+
+```
+<!-- Makes mobile sizing behave properly -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My Club Raffle</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+<style>
+    body {
+        background-color: #1d1934;
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    #logo {
+        display: block;
+        margin: 20px auto 10px auto;
+        max-width: 160px;
+        height: auto;
+    }
+
+    h1 {
+        font-size: clamp(1.4rem, 4vw, 3rem);
+        color: #e12826;
+        text-align: center;
+        margin: 5px 10px;
+    }
+
+    #display {
+        font-size: clamp(2rem, 10vw, 6rem);
+        color: #fece02;
+        margin: 30px 10px;
+        font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI", Arial, sans-serif;
+        text-align: center;
+        transition: color 0.2s;
+        word-break: break-word;
+    }
+
+    #start {
+        display: block;
+        margin: 20px auto;
+        font-size: clamp(1rem, 3vw, 1.5rem);
+        padding: 12px 24px;
+        border-radius: 8px;
+    }
+
+    /* Small screen tweaks */
+    @media (max-width: 600px) {
+        #logo {
+            max-width: 120px;
+        }
+
+        #display {
+            margin: 20px 10px;
+        }
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+```
+<img id="logo" src="logo.png" alt="Club Logo">
+
+<h1>Weekly Members Draw</h1>
+<h1>Jackpot $250</h1>
+
+<div id="display">Loading...</div>
+
+<button id="start" disabled>Start Members Draw</button>
+
+<script>
+    let participants = [];
+
+    const display = document.getElementById('display');
+    const startBtn = document.getElementById('start');
+
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQhbyJ2fksThS4Hv7c2f0ckZ0L2L7GyXjvYJ7DqKKEjeUl7ES7TSXWw9y-VyhMIpIRvCsCCfL9QD1fV/pub?gid=1606765783&single=true&output=csv";
+
+    async function loadParticipants() {
+        try {
+            const response = await fetch(CSV_URL);
+            const csvText = await response.text();
+
+            const results = Papa.parse(csvText, {
+                header: true,
+                skipEmptyLines: true
+            });
+
+            participants = results.data.filter(row => row.Number && row.Name);
+
+            if (participants.length > 0) {
+                startBtn.disabled = false;
+                display.textContent = "?";
+            } else {
+                display.textContent = "No valid data!";
+            }
+
+        } catch (error) {
+            console.error(error);
+            display.textContent = "Error loading data";
+        }
+    }
+
+    loadParticipants();
+
+    let intervalId = null;
+
+    function shuffleAnimation() {
+        let count = 0;
+        const maxCycles = 100;
+
+        intervalId = setInterval(() => {
+            const randomEntry = participants[Math.floor(Math.random() * participants.length)];
+            display.textContent = `${randomEntry.Number} - ${randomEntry.Name}`;
+            display.style.color = "#e12826";
+
+            count++;
+
+            if (count >= maxCycles) {
+                clearInterval(intervalId);
+
+                const winner = participants[Math.floor(Math.random() * participants.length)];
+                display.textContent = `🎉 ${winner.Number} - ${winner.Name} 🎉`;
+                display.style.color = "#fece02";
+
+                startBtn.disabled = false;
+            }
+
+        }, 50);
+    }
+
+    startBtn.addEventListener('click', () => {
+        startBtn.disabled = true;
+        shuffleAnimation();
+    });
+</script>
+```
+
+</body>
+</html>
